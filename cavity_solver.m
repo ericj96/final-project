@@ -2,7 +2,7 @@ function [PrsMatrix, uvelMatrix, vvelMatrix] = cavity_solver(~)
 tic   %begin timer function
 %--- Variables for file handling ---
 %--- All files are globally accessible ---
-
+% 
 global fp1 % For output of iterative residual history
 global fp2 % For output of field data (solution)
 %   global fp3 % For writing the restart file
@@ -26,8 +26,8 @@ global artviscy;  % Artificial viscosity in y-direction
 global ummsArray; % Array of umms values (funtion umms evaluated at all nodes)
 
 %************ Following are fixed parameters for array sizes *************
-imax = 35;   	% Number of points in the x-direction (use odd numbers only)
-jmax = 35;   	% Number of points in the y-direction (use odd numbers only)
+imax = 65;   	% Number of points in the x-direction (use odd numbers only)
+jmax = 65;   	% Number of points in the y-direction (use odd numbers only)
 neq = 3;       % Number of equation to be solved ( = 3: mass, x-mtm, y-mtm)
 %********************************************
 %***** All  variables declared here. **
@@ -62,7 +62,7 @@ irstr = 0;            % Restart flag: = 1 for restart (file 'restart.in', = 0 fo
 ipgorder = 0;         % Order of pressure gradient: 0 = 2nd, 1 = 3rd (not needed)
 lim = 1;              % variable to be used as the limiter sensor (= 1 for pressure)
 
-cfl  = 0.5;      % CFL number used to determine time step
+cfl  = 0.9;      % CFL number used to determine time step
 Cx = 0.01;     	% Parameter for 4th order artificial viscosity in x
 Cy = 0.01;      	% Parameter for 4th order artificial viscosity in y
 toler = 1.e-150; 	% Tolerance for iterative residual convergence
@@ -940,14 +940,14 @@ global artviscx artviscy
 % !************ADD CODING HERE FOR INTRO CFD STUDENTS************ */
 % !************************************************************** */
 for i=3:imax-2
-    for j=3:jmax-2
+    for j=1:jmax
         uvel2=u(i,j,2).^two+u(i,j,3).^two;
         beta2=max(uvel2,rkappa*vel2ref);
-        lambda_x=half*abs(u(i,j,2))+half*sqrt(u(i,j,2)+4*beta2);
-        lambda_y=half*abs(u(i,j,3))+half*sqrt(u(i,j,3)+4*beta2);
+        lambda_x=half*abs(u(i,j,2))+half*sqrt(u(i,j,2)^2+4*beta2);
+        lambda_y=half*abs(u(i,j,3))+half*sqrt(u(i,j,3)^2+4*beta2);
          
         d4pdx4=(u(i+2,j,1)-four*u(i+1,j,1)+six*u(i,j,1)-four*u(i-1,j,1)+u(i-2,j,1))/dx^4;
-        d4pdy4=(u(i,j+2,1)-four*u(i,j+1,1)+six*u(i,j,1)-four*u(i,j-1,1)+u(i,j-2,1))/dy^4;
+        d4pdy4=(u(i+2,j,1)-four*u(i+1,j,1)+six*u(i,j,1)-four*u(i-1,j,1)+u(i-2,j,1))/dy^4;
         
         artviscx(i,j) = -lambda_x*Cx*dx^3/beta2*d4pdx4;
         artviscy(i,j) = -lambda_y*Cy*dy^3/beta2*d4pdy4;
@@ -1005,8 +1005,7 @@ global artviscx artviscy dt s u
             
             uvel2=sqrt(u(i,j,2).^2+u(i,j,3).^2).^2;
             beta2=max(uvel2,rkappa*vel2ref);
-            
-            
+                        
             u(i,j,1)=u(i,j,1)-beta2*dt(i,j)*(rho*dudx+rho*dvdy-artviscx(i,j)-artviscy(i,j)-s(i,j));
             u(i,j,2)=u(i,j,2)-dt(i,j)/rho*(rho*u(i,j,2)*dudx+rho*u(i,j,3)*dudy+dpdx-rmu*d2udx2-rmu*d2udy2-s(i,j));
             u(i,j,3)=u(i,j,3)-dt(i,j)/rho*(rho*u(i,j,3)*dvdx+rho*u(i,j,3)*dvdy+dpdy-rmu*d2vdx2-rmu*d2vdy2-s(i,j));
@@ -1129,9 +1128,9 @@ for j=2:jmax-1
         beta2=max(uvel2,rkappa*vel2ref);
         
         
-        u(i,j,1)=uold(i,j,1)-beta2*dt(i,j)*(rho*dudx+rho*dvdy-artviscx(i,j)-artviscy(i,j)-s(i,j));
-        u(i,j,2)=uold(i,j,2)-dt(i,j)/rho*(rho*uold(i,j,2)*dudx+rho*uold(i,j,3)*dudy+dpdx-rmu*d2udx2-rmu*d2udy2-s(i,j));
-        u(i,j,3)=uold(i,j,3)-dt(i,j)/rho*(rho*uold(i,j,3)*dvdx+rho*uold(i,j,3)*dvdy+dpdy-rmu*d2vdx2-rmu*d2vdy2-s(i,j));
+        u(i,j,1)=uold(i,j,1)-beta2*dt(i,j)*(rho*dudx+rho*dvdy-artviscx(i,j)-artviscy(i,j)-s(i,j,1));
+        u(i,j,2)=uold(i,j,2)-dt(i,j)/rho*(rho*uold(i,j,2)*dudx+rho*uold(i,j,3)*dudy+dpdx-rmu*d2udx2-rmu*d2udy2-s(i,j,2));
+        u(i,j,3)=uold(i,j,3)-dt(i,j)/rho*(rho*uold(i,j,3)*dvdx+rho*uold(i,j,3)*dvdy+dpdy-rmu*d2vdx2-rmu*d2vdy2-s(i,j,3));
         
     end
 end
