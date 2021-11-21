@@ -26,8 +26,8 @@ global artviscy;  % Artificial viscosity in y-direction
 global ummsArray; % Array of umms values (funtion umms evaluated at all nodes)
 
 %************ Following are fixed parameters for array sizes *************
-imax = 65;   	% Number of points in the x-direction (use odd numbers only)
-jmax = 65;   	% Number of points in the y-direction (use odd numbers only)
+imax = 75;   	% Number of points in the x-direction (use odd numbers only)
+jmax = 75;   	% Number of points in the y-direction (use odd numbers only)
 neq = 3;       % Number of equation to be solved ( = 3: mass, x-mtm, y-mtm)
 %********************************************
 %***** All  variables declared here. **
@@ -56,18 +56,18 @@ six    = 6.0;
 
 nmax = 500000;        % Maximum number of iterations
 iterout = 5000;       % Number of time steps between solution output
-imms = 1;             % Manufactured solution flag: = 1 for manuf. sol., = 0 otherwise
-isgs = 0;             % Symmetric Gauss-Seidel  flag: = 1 for SGS, = 0 for point Jacobi
+imms = 0;             % Manufactured solution flag: = 1 for manuf. sol., = 0 otherwise
+isgs = 1;             % Symmetric Gauss-Seidel  flag: = 1 for SGS, = 0 for point Jacobi
 irstr = 0;            % Restart flag: = 1 for restart (file 'restart.in', = 0 for initial run
 ipgorder = 0;         % Order of pressure gradient: 0 = 2nd, 1 = 3rd (not needed)
 lim = 1;              % variable to be used as the limiter sensor (= 1 for pressure)
 
-cfl  = 0.9;      % CFL number used to determine time step
+cfl  = 0.5;      % CFL number used to determine time step
 Cx = 0.01;     	% Parameter for 4th order artificial viscosity in x
 Cy = 0.01;      	% Parameter for 4th order artificial viscosity in y
-toler = 1.e-150; 	% Tolerance for iterative residual convergence
+toler = 1.e-10; 	% Tolerance for iterative residual convergence
 rkappa = 0.1;   	% Time derivative preconditioning constant
-Re = 10;      	% Reynolds number = rho*Uinf*L/rmu
+Re = 100;      	% Reynolds number = rho*Uinf*L/rmu
 pinf = 0.801333844662; % Initial pressure (N/m^2) -> from MMS value at cavity center
 uinf = 1.0;      % Lid velocity (m/s)
 rho = 1.0;       % Density (kg/m^3)
@@ -294,15 +294,15 @@ for n = ninit:nmax
     if mod(n,100)==0
         figure(2)
         subplot(1,3,1)
-        contourf(flip(u(:,:,2)))
+        contourf((u(:,:,2)))
         colormap jet
         colorbar
         subplot(1,3,2)
-        contourf(flip(u(:,:,3)))
+        contourf((u(:,:,3)))
         colormap jet
         colorbar
         subplot(1,3,3)
-        contourf(flip(u(:,:,1)))
+        contourf((u(:,:,1)))
         colormap jet
         colorbar
         drawnow
@@ -507,28 +507,28 @@ global u
 % !************************************************************** */
 % !************ADD CODING HERE FOR INTRO CFD STUDENTS************ */
 % !************************************************************** */
-% Side Walls
-for j = 1:jmax-1
-    i = 1; % left
+% Top/Bottom Walls
+for j = 2:jmax-1
+    i = 1; % Top
     u(i,j,2) = uinf;   
     u(i,j,3) = 0;  
     u(i,j,1) = 2*u(i+1,j,1)-u(i+2,j,1);
         
-    i=imax; % right
+    i=imax; % Bottom
     u(i,j,2) = 0;    
     u(i,j,3) = 0; 
     u(i,j,1) = 2*u(i-1,j,1)-u(i-2,j,1);
 end
 
 
-% Top/Bottom Walls
-for i=1:imax
-    j = 1; % top
+% Side Walls
+for i=2:imax
+    j = 1; % Left
     u(1,j,2) = 0;
     u(1,j,3) = 0;
     u(i,j,1) = 2*u(i,j+1,1)-u(i,j+2,1);
         
-    j = jmax; % bottom
+    j = jmax; % Right
     u(imax,j,2) = 0;
     u(imax,j,3) = 0;
     u(i,j,1) = 2*u(i,j-1,1)-u(i,j-2,1);
@@ -889,8 +889,8 @@ global u dt
 
 delta_t_max=1e99;
 
-for i=2:imax-1
-    for j=2:jmax-1
+for i=1:imax
+    for j=1:jmax
         uvel2=sqrt(u(i,j,2).^2+u(i,j,3).^2).^2;
         beta2=max(uvel2,rkappa*vel2ref);
         lambda_x=1/2*(abs(u(i,j,2))+sqrt(u(i,j,2)+4*beta2));
@@ -1111,8 +1111,8 @@ global u uold artviscx artviscy dt s
 % !************************************************************** */
 
 uold=u;
-for j=2:jmax-1
-    for i=2:imax-1
+for i=imax-1:2
+    for j=jmax-1:2
         dudx=(uold(i+1,j,2)-uold(i-1,j,2))/2/dx;
         dudy=(uold(i,j+1,2)-uold(i,j-1,2))/2/dy;
         dvdx=(uold(i+1,j,3)-uold(i-1,j,3))/2/dx;
